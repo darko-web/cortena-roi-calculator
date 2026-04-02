@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortena ROI Calculator</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: inherit;
+      background: transparent;
+      color: #000;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .calculator {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .calculator-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .calculator-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 4px;
+    }
+
+    .calculator-header p {
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+    }
+
+    .calculator-body {
+      display: flex;
+      gap: 40px;
+      align-items: stretch;
+    }
+
+    .calculator-inputs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calculator-divider {
+      width: 1px;
+      background: #e5e5e5;
+      flex-shrink: 0;
+    }
+
+    .calculator-result {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+    }
+
+    /* Slider group */
+    .slider-group {
+      margin-bottom: 28px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .slider-label span {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .slider-label .slider-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    /* Custom range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e5e5;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.05);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e5e5;
+    }
+
+    .slider-range {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+
+    .slider-range span {
+      font-size: 11px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    /* Result display */
+    .result-number {
+      font-size: 56px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1;
+      transition: opacity 0.15s ease;
+    }
+
+    .result-label {
+      font-size: 15px;
+      color: #666;
+      margin-top: 8px;
+      font-weight: 400;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin-top: auto;
+      padding: 14px 16px;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+
+    .disclaimer p {
+      font-size: 11px;
+      color: #888;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .calculator {
+        padding: 28px 24px;
+      }
+
+      .calculator-body {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .calculator-divider {
+        width: 100%;
+        height: 1px;
+        margin: 24px 0;
+      }
+
+      .calculator-result {
+        min-height: 120px;
+      }
+
+      .result-number {
+        font-size: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="calculator-header">
+      <h2>ROI Calculator</h2>
+      <p>See how much you can save with Cortena</p>
+    </div>
+
+    <div class="calculator-body">
+      <div class="calculator-inputs">
+        <!-- Monthly invoices slider -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Monthly invoices</span>
+            <span class="slider-value" id="invoices-value">250</span>
+          </div>
+          <input
+            type="range"
+            id="invoices-slider"
+            min="50"
+            max="2000"
+            step="10"
+            value="250"
+          >
+          <div class="slider-range">
+            <span>50</span>
+            <span>2,000</span>
+          </div>
+        </div>
+
+        <!-- Hourly rate slider -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Hourly rate (EUR)</span>
+            <span class="slider-value" id="rate-value">€60</span>
+          </div>
+          <input
+            type="range"
+            id="rate-slider"
+            min="20"
+            max="120"
+            step="5"
+            value="60"
+          >
+          <div class="slider-range">
+            <span>€20</span>
+            <span>€120</span>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+          <p>Based on an average of 10 minutes per invoice for manual processing. If your team spends more or less time, adjust the result proportionally.</p>
+        </div>
+      </div>
+
+      <div class="calculator-divider"></div>
+
+      <div class="calculator-result">
+        <div class="result-number" id="result-number">4.9x</div>
+        <div class="result-label">cheaper with Cortena</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const invoicesSlider = document.getElementById('invoices-slider');
+    const rateSlider = document.getElementById('rate-slider');
+    const invoicesValue = document.getElementById('invoices-value');
+    const rateValue = document.getElementById('rate-value');
+    const resultNumber = document.getElementById('result-number');
+
+    function getCortenaPlanPrice(invoices) {
+      if (invoices <= 150) return 249;
+      if (invoices <= 400) return 549;
+      if (invoices <= 750) return 949;
+      return 1799;
+    }
+
+    function calculate() {
+      const invoices = parseInt(invoicesSlider.value);
+      const rate = parseInt(rateSlider.value);
+
+      // Update displayed values
+      invoicesValue.textContent = invoices.toLocaleString('en');
+      rateValue.textContent = '€' + rate;
+
+      // Calculate current cost
+      const toolCost = invoices * 0.66;
+      const bookkeepingCost = invoices * (10 / 60) * rate;
+      const totalCurrentCost = toolCost + bookkeepingCost;
+
+      // Get Cortena plan price
+      const planPrice = getCortenaPlanPrice(invoices);
+
+      // Calculate ratio
+      const ratio = totalCurrentCost / planPrice;
+
+      // Display result
+      resultNumber.textContent = ratio.toFixed(1) + 'x';
+
+      // Update slider fill (CSS gradient trick)
+      updateSliderFill(invoicesSlider);
+      updateSliderFill(rateSlider);
+    }
+
+    function updateSliderFill(slider) {
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      const val = parseFloat(slider.value);
+      const percent = ((val - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #e5e5e5 ${percent}%, #e5e5e5 100%)`;
+    }
+
+    // Listen for input events
+    invoicesSlider.addEventListener('input', calculate);
+    rateSlider.addEventListener('input', calculate);
+
+    // Initial calculation
+    calculate();
+  </script>
+</body>
+</html>
