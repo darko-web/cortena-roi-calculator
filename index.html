@@ -354,12 +354,31 @@
     let currentMode = 'external';
 
     function getCortenaPlanPrice(invoices) {
-      if (invoices <= 150) return 249;
-      if (invoices <= 400) return 549;
-      if (invoices <= 750) return 949;
-      if (invoices <= 1500) return 1799;
-      if (invoices <= 3500) return 3999;
-      return 7499;
+      // Interpolate linearly between anchor points for a smooth, always-increasing ratio
+      const tiers = [
+        [100, 249],
+        [250, 549],
+        [500, 949],
+        [1000, 1799],
+        [2500, 3999],
+        [5000, 7499]
+      ];
+
+      // Below first tier
+      if (invoices <= tiers[0][0]) return tiers[0][1];
+      // Above last tier
+      if (invoices >= tiers[tiers.length - 1][0]) return tiers[tiers.length - 1][1];
+
+      // Find the two anchor points to interpolate between
+      for (let i = 0; i < tiers.length - 1; i++) {
+        const [v1, p1] = tiers[i];
+        const [v2, p2] = tiers[i + 1];
+        if (invoices >= v1 && invoices <= v2) {
+          const t = (invoices - v1) / (v2 - v1);
+          return p1 + t * (p2 - p1);
+        }
+      }
+      return tiers[tiers.length - 1][1];
     }
 
     function setMode(mode) {
