@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortena ROI Calculator</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: rgba(132, 178, 54, 0.4);
+      color: #000;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .calculator {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 48px;
+      max-width: 880px;
+      width: 100%;
+      margin: 0 auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .calculator-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .calculator-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 4px;
+    }
+
+    .calculator-header p {
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+    }
+
+    /* Toggle */
+    .toggle-group {
+      display: flex;
+      background: #e5e5e5;
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 28px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn.active {
+      background: #000;
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .calculator-body {
+      display: flex;
+      gap: 48px;
+      align-items: stretch;
+    }
+
+    .calculator-inputs {
+      flex: 1.85;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calculator-divider {
+      width: 1px;
+      background: #e5e5e5;
+      flex-shrink: 0;
+    }
+
+    .calculator-result {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+      padding-top: 24px;
+    }
+
+    /* Slider group */
+    .slider-group {
+      margin-bottom: 28px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .slider-label span {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .slider-label .slider-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    /* Custom range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e5e5;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.05);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e5e5;
+    }
+
+    .slider-range {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+
+    .slider-range span {
+      font-size: 11px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    /* Donut chart */
+    .donut-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin-bottom: 12px;
+    }
+
+    .donut-container svg {
+      transform: rotate(-90deg);
+    }
+
+    .donut-container svg circle {
+      transition: stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease;
+    }
+
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .donut-center .total-cost {
+      font-size: 18px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1.2;
+    }
+
+    .donut-center .total-label {
+      font-size: 10px;
+      color: #888;
+      font-weight: 400;
+    }
+
+    /* Legend */
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+      align-self: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #444;
+      font-weight: 400;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-dot.team-hours {
+      background: #333;
+    }
+
+    .legend-dot.processing-tools {
+      background: #888;
+    }
+
+    .legend-amount {
+      font-weight: 600;
+      color: #000;
+      margin-left: 2px;
+    }
+
+    /* Result multiplier */
+    .result-number {
+      font-size: 40px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1;
+      transition: opacity 0.15s ease;
+    }
+
+    .result-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* CTA Button */
+    .cta-button {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 12px 28px;
+      background: #84B236;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .cta-button:hover {
+      opacity: 0.85;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin-top: auto;
+      padding: 14px 16px;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+
+    .disclaimer p {
+      font-size: 11px;
+      color: #888;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .calculator {
+        padding: 28px 24px;
+      }
+
+      .calculator-body {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .calculator-divider {
+        width: 100%;
+        height: 1px;
+        margin: 24px 0;
+      }
+
+      .calculator-result {
+        min-height: 120px;
+      }
+
+      .result-number {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="calculator-header">
+      <h2>ROI Calculator</h2>
+      <p>See how much you can save with Cortena</p>
+    </div>
+
+    <div class="calculator-body">
+      <div class="calculator-inputs">
+        <!-- Toggle: External vs Internal -->
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-mode="external" onclick="setMode('external')">External Bookkeeping</button>
+          <button class="toggle-btn" data-mode="internal" onclick="setMode('internal')">Internal Team</button>
+        </div>
+
+        <!-- Monthly invoices slider -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Monthly invoices</span>
+            <span class="slider-value" id="invoices-value">250</span>
+          </div>
+          <input
+            type="range"
+            id="invoices-slider"
+            min="100"
+            max="5000"
+            step="50"
+            value="250"
+          >
+          <div class="slider-range">
+            <span>100</span>
+            <span>5,000</span>
+          </div>
+        </div>
+
+        <!-- Rate slider (external mode) -->
+        <div class="slider-group" id="rate-group">
+          <div class="slider-label">
+            <span id="rate-label">Hourly rate (EUR)</span>
+            <span class="slider-value" id="rate-value">&euro;100</span>
+          </div>
+          <input
+            type="range"
+            id="rate-slider"
+            min="50"
+            max="200"
+            step="5"
+            value="100"
+          >
+          <div class="slider-range">
+            <span id="rate-min">&euro;50</span>
+            <span id="rate-max">&euro;200</span>
+          </div>
+        </div>
+
+        <div class="disclaimer">
+          <p>Estimates based on 10 min/invoice avg. processing time (incl. pre-accounting, fixes, supplier follow-ups, receipt chasing) and average market tool pricing.</p>
+        </div>
+      </div>
+
+      <div class="calculator-divider"></div>
+
+      <div class="calculator-result">
+        <!-- Donut chart -->
+        <div class="donut-container">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle
+              id="donut-bg"
+              cx="80" cy="80" r="60"
+              fill="none"
+              stroke="#e5e5e5"
+              stroke-width="20"
+            />
+            <circle
+              id="donut-segment-tools"
+              cx="80" cy="80" r="60"
+              fill="none"
+              stroke="#888"
+              stroke-width="20"
+              stroke-dasharray="0 377"
+              stroke-dashoffset="0"
+              stroke-linecap="butt"
+            />
+            <circle
+              id="donut-segment-team"
+              cx="80" cy="80" r="60"
+              fill="none"
+              stroke="#333"
+              stroke-width="20"
+              stroke-dasharray="0 377"
+              stroke-dashoffset="0"
+              stroke-linecap="butt"
+            />
+          </svg>
+          <div class="donut-center">
+            <div class="total-cost" id="total-cost">&euro;0</div>
+            <div class="total-label">/mo current</div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="donut-legend">
+          <div class="legend-item">
+            <span class="legend-dot team-hours"></span>
+            Team hours <span class="legend-amount" id="legend-team">&euro;0</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot processing-tools"></span>
+            Processing tools <span class="legend-amount" id="legend-tools">&euro;0</span>
+          </div>
+        </div>
+
+        <!-- Multiplier -->
+        <div class="result-number" id="result-number">7.9x</div>
+        <div class="result-label">cheaper with Cortena</div>
+        <a href="#" onclick="return false" class="cta-button">Start saving with Cortena</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const invoicesSlider = document.getElementById('invoices-slider');
+    const rateSlider = document.getElementById('rate-slider');
+    const invoicesValue = document.getElementById('invoices-value');
+    const rateValue = document.getElementById('rate-value');
+    const rateLabel = document.getElementById('rate-label');
+    const rateMin = document.getElementById('rate-min');
+    const rateMax = document.getElementById('rate-max');
+    const resultNumber = document.getElementById('result-number');
+
+    // Donut elements
+    const donutSegmentTeam = document.getElementById('donut-segment-team');
+    const donutSegmentTools = document.getElementById('donut-segment-tools');
+    const totalCostEl = document.getElementById('total-cost');
+    const legendTeamEl = document.getElementById('legend-team');
+    const legendToolsEl = document.getElementById('legend-tools');
+
+    const CIRCUMFERENCE = 2 * Math.PI * 60; // ~376.99
+
+    let currentMode = 'external';
+
+    function getCortenaPlanPrice(invoices) {
+      const tiers = [
+        [100, 249],
+        [250, 549],
+        [500, 949],
+        [1000, 1799],
+        [2500, 3999],
+        [5000, 7499]
+      ];
+
+      if (invoices <= tiers[0][0]) return tiers[0][1];
+      if (invoices >= tiers[tiers.length - 1][0]) return tiers[tiers.length - 1][1];
+
+      for (let i = 0; i < tiers.length - 1; i++) {
+        const [v1, p1] = tiers[i];
+        const [v2, p2] = tiers[i + 1];
+        if (invoices >= v1 && invoices <= v2) {
+          const t = (invoices - v1) / (v2 - v1);
+          return p1 + t * (p2 - p1);
+        }
+      }
+      return tiers[tiers.length - 1][1];
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      if (mode === 'external') {
+        rateLabel.textContent = 'Hourly rate (EUR)';
+        rateSlider.min = 50;
+        rateSlider.max = 200;
+        rateSlider.step = 5;
+        rateSlider.value = 100;
+        rateMin.textContent = '\u20AC50';
+        rateMax.textContent = '\u20AC200';
+        rateValue.textContent = '\u20AC100';
+      } else {
+        rateLabel.textContent = 'Monthly gross salary (EUR)';
+        rateSlider.min = 2000;
+        rateSlider.max = 6000;
+        rateSlider.step = 100;
+        rateSlider.value = 3000;
+        rateMin.textContent = '\u20AC2,000';
+        rateMax.textContent = '\u20AC6,000';
+        rateValue.textContent = '\u20AC3,000';
+      }
+
+      updateSliderFill(rateSlider);
+      calculate();
+    }
+
+    function updateDonut(teamCost, toolCost, totalCost) {
+      const teamFraction = totalCost > 0 ? teamCost / totalCost : 0;
+      const toolsFraction = totalCost > 0 ? toolCost / totalCost : 0;
+
+      const teamArc = teamFraction * CIRCUMFERENCE;
+      const toolsArc = toolsFraction * CIRCUMFERENCE;
+
+      // Team hours segment starts at the top (0 offset after -90deg CSS rotation)
+      donutSegmentTeam.setAttribute('stroke-dasharray', `${teamArc} ${CIRCUMFERENCE - teamArc}`);
+      donutSegmentTeam.setAttribute('stroke-dashoffset', '0');
+
+      // Processing tools segment starts where team hours ends
+      donutSegmentTools.setAttribute('stroke-dasharray', `${toolsArc} ${CIRCUMFERENCE - toolsArc}`);
+      donutSegmentTools.setAttribute('stroke-dashoffset', `${-teamArc}`);
+
+      // Update center text
+      totalCostEl.textContent = '\u20AC' + Math.round(totalCost).toLocaleString('en');
+
+      // Update legend
+      legendTeamEl.textContent = '\u20AC' + Math.round(teamCost).toLocaleString('en');
+      legendToolsEl.textContent = '\u20AC' + Math.round(toolCost).toLocaleString('en');
+    }
+
+    function calculate() {
+      const invoices = parseInt(invoicesSlider.value);
+      const sliderVal = parseInt(rateSlider.value);
+
+      invoicesValue.textContent = invoices.toLocaleString('en');
+
+      let hourlyRate;
+
+      if (currentMode === 'external') {
+        hourlyRate = sliderVal;
+        rateValue.textContent = '\u20AC' + sliderVal;
+      } else {
+        const totalCostEmployee = sliderVal * 1.4;
+        hourlyRate = totalCostEmployee / 144;
+        rateValue.textContent = '\u20AC' + sliderVal.toLocaleString('en');
+      }
+
+      // Calculate current cost
+      const toolCost = invoices * 0.66;
+      const bookkeepingCost = invoices * (10 / 60) * hourlyRate;
+      const totalCurrentCost = toolCost + bookkeepingCost;
+
+      // Get Cortena plan price
+      const planPrice = getCortenaPlanPrice(invoices);
+
+      // Calculate ratio
+      const ratio = totalCurrentCost / planPrice;
+
+      // Display result
+      resultNumber.textContent = ratio.toFixed(1) + 'x';
+
+      // Update donut
+      updateDonut(bookkeepingCost, toolCost, totalCurrentCost);
+
+      // Update slider fills
+      updateSliderFill(invoicesSlider);
+      updateSliderFill(rateSlider);
+    }
+
+    function updateSliderFill(slider) {
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      const val = parseFloat(slider.value);
+      const percent = ((val - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #e5e5e5 ${percent}%, #e5e5e5 100%)`;
+    }
+
+    invoicesSlider.addEventListener('input', calculate);
+    rateSlider.addEventListener('input', calculate);
+
+    // Initial calculation
+    calculate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortena ROI Calculator</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: rgba(132, 178, 54, 0.4);
+      color: #000;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .calculator {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 48px;
+      max-width: 880px;
+      width: 100%;
+      margin: 0 auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .calculator-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .calculator-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 4px;
+    }
+
+    .calculator-header p {
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+    }
+
+    /* Toggle */
+    .toggle-group {
+      display: flex;
+      background: #e5e5e5;
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 28px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn.active {
+      background: #000;
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .calculator-body {
+      display: flex;
+      gap: 48px;
+      align-items: stretch;
+    }
+
+    .calculator-inputs {
+      flex: 1.85;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calculator-divider {
+      width: 1px;
+      background: #e5e5e5;
+      flex-shrink: 0;
+    }
+
+    .calculator-result {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+      padding-top: 24px;
+    }
+
+    /* Slider group */
+    .slider-group {
+      margin-bottom: 28px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .slider-label span {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .slider-label .slider-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    /* Custom range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e5e5;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.05);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e5e5;
+    }
+
+    .slider-range {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+
+    .slider-range span {
+      font-size: 11px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    /* Result display */
+    .result-number {
+      font-size: 56px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1;
+      transition: opacity 0.15s ease;
+    }
+
+    .result-label {
+      font-size: 15px;
+      color: #666;
+      margin-top: 8px;
+      font-weight: 400;
+    }
+
+    /* CTA Button */
+    .cta-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 28px;
+      background: #84B236;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .cta-button:hover {
+      opacity: 0.85;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin-top: auto;
+      padding: 14px 16px;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+
+    .disclaimer p {
+      font-size: 11px;
+      color: #888;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* Cost cards row */
+    .cost-cards-section {
+      margin-top: 32px;
+      padding-top: 28px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .cost-cards-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .cost-card {
+      flex: 1;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cost-card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cost-card-icon {
+      font-size: 16px;
+      line-height: 1;
+      color: #666;
+    }
+
+    .cost-card-label {
+      font-size: 13px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .cost-card-amount {
+      font-size: 20px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .cost-card-period {
+      font-size: 12px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    .cost-card.total {
+      background: #f5f5f5;
+      border-color: #d0d0d0;
+    }
+
+    .cost-card.total .cost-card-amount {
+      font-size: 20px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .cost-cards-tagline {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .calculator {
+        padding: 28px 24px;
+      }
+
+      .calculator-body {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .calculator-divider {
+        width: 100%;
+        height: 1px;
+        margin: 24px 0;
+      }
+
+      .calculator-result {
+        min-height: 120px;
+      }
+
+      .result-number {
+        font-size: 48px;
+      }
+
+      .cost-cards-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="calculator-header">
+      <h2>ROI Calculator</h2>
+      <p>See how much you can save with Cortena</p>
+    </div>
+
+    <div class="calculator-body">
+      <div class="calculator-inputs">
+        <!-- Toggle: External vs Internal -->
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-mode="external" onclick="setMode('external')">External Bookkeeping</button>
+          <button class="toggle-btn" data-mode="internal" onclick="setMode('internal')">Internal Team</button>
+        </div>
+
+        <!-- Monthly invoices slider -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Monthly invoices</span>
+            <span class="slider-value" id="invoices-value">250</span>
+          </div>
+          <input
+            type="range"
+            id="invoices-slider"
+            min="100"
+            max="5000"
+            step="50"
+            value="250"
+          >
+          <div class="slider-range">
+            <span>100</span>
+            <span>5,000</span>
+          </div>
+        </div>
+
+        <!-- Rate slider (external mode) -->
+        <div class="slider-group" id="rate-group">
+          <div class="slider-label">
+            <span id="rate-label">Hourly rate (EUR)</span>
+            <span class="slider-value" id="rate-value">€100</span>
+          </div>
+          <input
+            type="range"
+            id="rate-slider"
+            min="50"
+            max="200"
+            step="5"
+            value="100"
+          >
+          <div class="slider-range">
+            <span id="rate-min">€50</span>
+            <span id="rate-max">€200</span>
+          </div>
+        </div>
+
+        <div class="disclaimer">
+          <p>Estimates based on 10 min/invoice avg. processing time (incl. pre-accounting, fixes, supplier follow-ups, receipt chasing) and average market tool pricing.</p>
+        </div>
+      </div>
+
+      <div class="calculator-divider"></div>
+
+      <div class="calculator-result">
+        <div class="result-number" id="result-number">7.9x</div>
+        <div class="result-label">cheaper with Cortena</div>
+        <a href="#" onclick="return false" class="cta-button">Start saving with Cortena</a>
+      </div>
+    </div>
+
+    <!-- Cost breakdown cards -->
+    <div class="cost-cards-section">
+      <div class="cost-cards-row">
+        <div class="cost-card">
+          <div class="cost-card-header">
+            <span class="cost-card-icon">&#9201;</span>
+            <span class="cost-card-label">Team hours</span>
+          </div>
+          <div>
+            <span class="cost-card-amount" id="card-team-hours">€4,167</span>
+            <span class="cost-card-period">/mo</span>
+          </div>
+        </div>
+
+        <div class="cost-card">
+          <div class="cost-card-header">
+            <span class="cost-card-icon">&#9881;</span>
+            <span class="cost-card-label">Processing tools</span>
+          </div>
+          <div>
+            <span class="cost-card-amount" id="card-processing-tools">€165</span>
+            <span class="cost-card-period">/mo</span>
+          </div>
+        </div>
+
+        <div class="cost-card total">
+          <div class="cost-card-header">
+            <span class="cost-card-label">Total current cost</span>
+          </div>
+          <div>
+            <span class="cost-card-amount" id="card-total-cost">€4,332</span>
+            <span class="cost-card-period">/mo</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="cost-cards-tagline">With Cortena, this becomes one solution</p>
+    </div>
+  </div>
+
+  <script>
+    const invoicesSlider = document.getElementById('invoices-slider');
+    const rateSlider = document.getElementById('rate-slider');
+    const invoicesValue = document.getElementById('invoices-value');
+    const rateValue = document.getElementById('rate-value');
+    const rateLabel = document.getElementById('rate-label');
+    const rateMin = document.getElementById('rate-min');
+    const rateMax = document.getElementById('rate-max');
+    const resultNumber = document.getElementById('result-number');
+
+    const cardTeamHours = document.getElementById('card-team-hours');
+    const cardProcessingTools = document.getElementById('card-processing-tools');
+    const cardTotalCost = document.getElementById('card-total-cost');
+
+    let currentMode = 'external';
+
+    function getCortenaPlanPrice(invoices) {
+      // Interpolate linearly between anchor points for a smooth, always-increasing ratio
+      const tiers = [
+        [100, 249],
+        [250, 549],
+        [500, 949],
+        [1000, 1799],
+        [2500, 3999],
+        [5000, 7499]
+      ];
+
+      // Below first tier
+      if (invoices <= tiers[0][0]) return tiers[0][1];
+      // Above last tier
+      if (invoices >= tiers[tiers.length - 1][0]) return tiers[tiers.length - 1][1];
+
+      // Find the two anchor points to interpolate between
+      for (let i = 0; i < tiers.length - 1; i++) {
+        const [v1, p1] = tiers[i];
+        const [v2, p2] = tiers[i + 1];
+        if (invoices >= v1 && invoices <= v2) {
+          const t = (invoices - v1) / (v2 - v1);
+          return p1 + t * (p2 - p1);
+        }
+      }
+      return tiers[tiers.length - 1][1];
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      // Update toggle buttons
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      if (mode === 'external') {
+        rateLabel.textContent = 'Hourly rate (EUR)';
+        rateSlider.min = 50;
+        rateSlider.max = 200;
+        rateSlider.step = 5;
+        rateSlider.value = 100;
+        rateMin.textContent = '€50';
+        rateMax.textContent = '€200';
+        rateValue.textContent = '€100';
+      } else {
+        rateLabel.textContent = 'Monthly gross salary (EUR)';
+        rateSlider.min = 2000;
+        rateSlider.max = 6000;
+        rateSlider.step = 100;
+        rateSlider.value = 3000;
+        rateMin.textContent = '€2,000';
+        rateMax.textContent = '€6,000';
+        rateValue.textContent = '€3,000';
+      }
+
+      updateSliderFill(rateSlider);
+      calculate();
+    }
+
+    function formatEuro(value) {
+      return '€' + Math.round(value).toLocaleString('en');
+    }
+
+    function calculate() {
+      const invoices = parseInt(invoicesSlider.value);
+      const sliderVal = parseInt(rateSlider.value);
+
+      // Update displayed values
+      invoicesValue.textContent = invoices.toLocaleString('en');
+
+      let hourlyRate;
+
+      if (currentMode === 'external') {
+        hourlyRate = sliderVal;
+        rateValue.textContent = '€' + sliderVal;
+      } else {
+        // Internal: salary + 40% overhead, divided by 144 avg working hours
+        const totalCostEmployee = sliderVal * 1.4;
+        hourlyRate = totalCostEmployee / 144;
+        rateValue.textContent = '€' + sliderVal.toLocaleString('en');
+      }
+
+      // Calculate current cost
+      const toolCost = invoices * 0.66;
+      const bookkeepingCost = invoices * (10 / 60) * hourlyRate;
+      const totalCurrentCost = toolCost + bookkeepingCost;
+
+      // Get Cortena plan price
+      const planPrice = getCortenaPlanPrice(invoices);
+
+      // Calculate ratio
+      const ratio = totalCurrentCost / planPrice;
+
+      // Display result
+      resultNumber.textContent = ratio.toFixed(1) + 'x';
+
+      // Update cost cards
+      cardTeamHours.textContent = formatEuro(bookkeepingCost);
+      cardProcessingTools.textContent = formatEuro(toolCost);
+      cardTotalCost.textContent = formatEuro(totalCurrentCost);
+
+      // Update slider fills
+      updateSliderFill(invoicesSlider);
+      updateSliderFill(rateSlider);
+    }
+
+    function updateSliderFill(slider) {
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      const val = parseFloat(slider.value);
+      const percent = ((val - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #e5e5e5 ${percent}%, #e5e5e5 100%)`;
+    }
+
+    // Listen for input events
+    invoicesSlider.addEventListener('input', calculate);
+    rateSlider.addEventListener('input', calculate);
+
+    // Initial calculation
+    calculate();
+  </script>
+</body>
+</html>
